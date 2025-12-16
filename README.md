@@ -8,6 +8,9 @@ Requirements:
 - Git
 - EF Core CLI (for database migrations)
 
+Install .NET 8 SDK:
+`dotnet tool install -g dotnet-ef --version 8.*`
+
 Clone the repository:</br>
 `git clone <repository-url>`</br>
 `cd case-application`
@@ -17,6 +20,9 @@ Build the project</br>
 
 Start PostgreSQL using Docker:</br>
 `docker run -d --name devicemanagement-db -e POSTGRES_DB=devicemanagement -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16`
+
+Migrate the database:</id>
+`dotnet ef database update --project case-application\case-application.csproj`
 
 Run the API locally:
 `dotnet run --project case-application\case-application.csproj`
