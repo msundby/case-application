@@ -1,17 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using case_application.Contracts;
+using case_application.Exceptions;
 using case_application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace case_application.Controllers
 {
     [ApiController]
-    [Route("api/devices")]
+    [Route("api/v1/devices")]
     public class DeviceController : ControllerBase
     {
-        private readonly DeviceService _deviceService;
+        private readonly IDeviceService _deviceService;
 
-        public DeviceController(DeviceService deviceService)
+        public DeviceController(IDeviceService deviceService)
         {
             _deviceService = deviceService;
         }
@@ -22,33 +23,44 @@ namespace case_application.Controllers
             try
             {
                 await _deviceService.Create(request, ct);
-                return Ok();
+                return CreatedAtAction(nameof(Create), new { id = request.SerialNumber }, request);
+            }
+            
+            catch(ConflictException e)
+            {
+                return Conflict(e.Message);
             }
             catch (ValidationException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred.");
             }
         }
 
         [HttpPut("{serialNumber}")]
         public async Task<ActionResult> Update(string serialNumber, [FromBody] UpdateDeviceRequest request, CancellationToken ct)
         {
-            if(!Guid.TryParse(serialNumber, out var guid))
-            {
-                return BadRequest("Serial number must be a valid GUID");
-            }
-
             try
             {
-                await _deviceService.Update(guid, request, ct);
+                await _deviceService.Update(serialNumber, request, ct);
                 return NoContent();
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
             }
             catch (ValidationException e)
             {
                 return BadRequest(e.Message);
             }
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
-
     }
 
 }

@@ -1,18 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using case_application.Contracts;
 using case_application.Domain;
+using case_application.Exceptions;
 using case_application.Repositories;
 
 namespace case_application.Services
 {
-    public class DeviceService
+    public class DeviceService : IDeviceService
     {
         private readonly IDeviceRepository _repository;
 
         public DeviceService(IDeviceRepository repository)
         {
             _repository = repository;
-        }   
+        }
 
         public async Task Create(CreateDeviceRequest request, CancellationToken ct)
         {
@@ -24,7 +25,7 @@ namespace case_application.Services
             var existing = await _repository.GetBySerialAsync(serial, ct);
             if (existing != null)
             {
-                throw new ValidationException("Device already exists");
+                throw new ConflictException("Device already exists"); 
             }
 
             var device = new Device(
@@ -42,10 +43,15 @@ namespace case_application.Services
             await _repository.SaveChangesAsync(ct);
         }
 
-        public async Task Update(Guid serialNumber, UpdateDeviceRequest request, CancellationToken ct)
+        public async Task Update(string serialNumber, UpdateDeviceRequest request, CancellationToken ct)
         {
-            var device = (await _repository.GetBySerialAsync(serialNumber, ct))
-            ?? throw new ValidationException("Device not found");
+            if (!Guid.TryParse(serialNumber, out var guid))
+            {
+                throw new ValidationException("Serial number must be a valid GUID");
+            }
+
+            var device = (await _repository.GetBySerialAsync(guid, ct))
+            ?? throw new NotFoundException("Device not found");
 
             device.Update(
                 request.PrimaryUserEmail,

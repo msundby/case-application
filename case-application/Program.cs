@@ -22,7 +22,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
-builder.Services.AddScoped<DeviceService>();
+builder.Services.AddScoped<IDeviceService, DeviceService>();
 
 
 var app = builder.Build();
